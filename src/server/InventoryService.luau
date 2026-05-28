@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UpdateClientInventory = ReplicatedStorage.Remotes.UpdateClientInventory
+local UpdateInventory = ReplicatedStorage.Remotes.UpdateInventory
+local Players = game:GetService("Players")
 
 local InventoryService = {}
 
@@ -27,11 +28,16 @@ function InventoryService:AddPet(player, petId)
 
 	table.insert(inventory.Pets, petData)
 
-	print(player.Name, "received pet:", petId)
+	print("Server inventory updated")
 end
 
-function InventoryService:UpdateClient(player)
-	UpdateClientInventory:FireClient(player, self:GetInventory(player))
+function InventoryService:PushInventory(player)
+	print("Send to Client:", player.Name)
+	UpdateInventory:FireClient(player, self:GetInventory(player))
 end
+
+Players.PlayerAdded:Connect(function(player)
+	InventoryService:PushInventory(player)
+end)
 
 return InventoryService

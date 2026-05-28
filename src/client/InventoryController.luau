@@ -1,17 +1,17 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UpdateClientInventory = ReplicatedStorage.Remotes.UpdateClientInventory
+local UpdateInventory = ReplicatedStorage.Remotes.UpdateInventory
 
 local InventoryController = {}
 
 local ClientInventory = {}
 
-UpdateClientInventory.OnClientEvent:Connect(function(ServerInventory)
+UpdateInventory.OnClientEvent:Connect(function(ServerInventory)
 	ClientInventory = ServerInventory
-	print("Client inventory updated:", ClientInventory)
+	print("Client inventory updated")
 end)
 
-function InventoryController:DisplayClientInventory()
-	print("Display Client Inventory:", ClientInventory)
+function InventoryController:DisplayInventory()
+	print(ClientInventory)
 end
 
 return InventoryController

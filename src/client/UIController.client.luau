@@ -16,7 +16,7 @@ local Buttons = {
 	end,
 	InventoryButton = function()
 		print("Inventory button clicked")
-		InventoryController.DisplayClientInventory()
+		InventoryController.DisplayInventory()
 	end,
 }
 

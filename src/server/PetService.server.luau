@@ -46,5 +46,5 @@ end
 HatchPet.OnServerEvent:Connect(function(player)
 	PetService:SpawnPet(player)
 	InventoryService:AddPet(player, "BasicPet")
-	InventoryService:UpdateClient(player)
+	InventoryService:PushInventory(player)
 end)
