@@ -11,10 +11,6 @@ local humanoid
 local DuckData = nil
 local currentMovementState = nil
 
-local function RequestDuckUpdate()
-	UpdateDuckRemote:FireServer()
-end
-
 UpdateDuckRemote.OnClientEvent:Connect(function(ServerData)
 	DuckData = ServerData
 	print("Duck data updated:", DuckData)
@@ -23,7 +19,7 @@ end)
 player.CharacterAdded:Connect(function(character)
 	root = character:WaitForChild("HumanoidRootPart")
 	humanoid = character:WaitForChild("Humanoid")
-	RequestDuckUpdate()
+	UpdateDuckRemote:FireServer()
 end)
 
 RunService.Heartbeat:Connect(function()
@@ -36,11 +32,11 @@ RunService.Heartbeat:Connect(function()
 		newMovementState = "Water"
 	elseif humanoid:GetState() == Enum.HumanoidStateType.Freefall then
 		local velocity = root.AssemblyLinearVelocity
-		if velocity.Y < -10 then
+		if velocity.Y < 0 then
 			root.AssemblyLinearVelocity = Vector3.new(velocity.X, -10, velocity.Z)
 		end
 		newMovementState = "Air"
-	else
+	elseif humanoid:GetState() == Enum.HumanoidStateType.Running then
 		newMovementState = "Land"
 	end
 

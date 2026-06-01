@@ -25,5 +25,6 @@ Players.PlayerAdded:Connect(function(player)
 		weld.Part0 = root
 		weld.Part1 = duck
 		weld.Parent = duck
+		duck.CanCollide = false
 	end)
 end)

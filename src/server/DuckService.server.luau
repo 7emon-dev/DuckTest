@@ -1,15 +1,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
 local UpdateDuckRemote = ReplicatedStorage.Remotes.UpdateDuck
+local ProgressionConfig = require(ReplicatedStorage.Shared.ProgressionConfig)
 
 local DuckService = {}
 
-local DuckDatas = {}
-
 local roots = {}
 local humanoids = {}
-local distances = {}
 local lastPositions = {}
 
 local DuckDatas = {}
@@ -23,13 +22,12 @@ Players.PlayerAdded:Connect(function(player)
 		humanoids[player.UserId] = humanoid
 
 		lastPositions[player.UserId] = root.Position
-		distances[player.UserId] = 0
 
 		DuckDatas[player.UserId] = {
 			Speed = {
-				Land = 1,
-				Water = 1,
-				Air = 1,
+				Land = 12,
+				Water = 12,
+				Air = 12,
 			},
 			XP = {
 				Land = 0,
@@ -37,13 +35,16 @@ Players.PlayerAdded:Connect(function(player)
 				Air = 0,
 				Total = 0,
 			},
-			Level = 1,
+			Level = {
+				Land = 1,
+				Water = 1,
+				Air = 1,
+			},
 		}
-		distances[player.UserId] = {
-			Land = 0,
-			Water = 0,
-			Air = 0,
-		}
+
+		for level, value in pairs(DuckDatas[player.UserId].Level) do
+			DuckDatas[player.UserId].Speed[level] = ProgressionConfig.GetSpeed(value)
+		end
 	end)
 end)
 
@@ -51,7 +52,6 @@ Players.PlayerRemoving:Connect(function(player)
 	roots[player.UserId] = nil
 	humanoids[player.UserId] = nil
 	lastPositions[player.UserId] = nil
-	distances[player.UserId] = nil
 	DuckDatas[player.UserId] = nil
 end)
 
@@ -65,7 +65,13 @@ function DuckService:AddXP(player, stat, amount)
 	if not data then
 		return
 	end
+
 	data.XP[stat] += amount
+
+	if data.XP[stat] >= ProgressionConfig.GetXPRequired(data.Level[stat]) then
+		data.XP[stat] -= ProgressionConfig.GetXPRequired(data.Level[stat])
+		self:LevelUp(player, stat, 1)
+	end
 	UpdateDuckRemote:FireClient(player, data)
 end
 
@@ -74,11 +80,11 @@ function DuckService:LevelUp(player, stat, amount)
 	if not data then
 		return
 	end
-	data.Speed[stat] += amount
-	UpdateDuckRemote:FireClient(player, data)
+	data.Level[stat] += amount
+	data.Speed[stat] = ProgressionConfig.GetSpeed(data.Level[stat])
 end
 
-RunService.Heartbeat:Connect(function(dt)
+RunService.Heartbeat:Connect(function()
 	for userId, root in pairs(roots) do
 		local humanoid = humanoids[userId]
 
@@ -86,41 +92,30 @@ RunService.Heartbeat:Connect(function(dt)
 			continue
 		end
 
-		local lastPos = lastPositions[userId]
-
-		if not lastPos then
-			lastPositions[userId] = root.Position
-			continue
-		end
-
-		local distanceMoved = (root.Position - lastPos).Magnitude
+		local delta = root.Position - lastPositions[userId]
+		local horizontal = Vector3.new(delta.X, 0, delta.Z)
+		local vertical = math.abs(delta.Y)
+		local distanceMoved
 
 		lastPositions[userId] = root.Position
 
-		if distanceMoved < 0.1 then
+		local stat
+		local state = humanoid:GetState()
+
+		if humanoid.FloorMaterial == Enum.Material.Water then
+			stat = "Water"
+			distanceMoved = horizontal.Magnitude
+		elseif state == Enum.HumanoidStateType.Freefall then
+			stat = "Air"
+			distanceMoved = vertical
+		elseif state == Enum.HumanoidStateType.Running then
+			stat = "Land"
+			distanceMoved = horizontal.Magnitude
+		else
 			continue
 		end
 
-		local stat
-		if humanoid.FloorMaterial == Enum.Material.Water then
-			stat = "Water"
-		elseif humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-			stat = "Air"
-		else
-			stat = "Land"
-		end
-
-		distances[userId][stat] += distanceMoved
-
-		if distances[userId][stat] >= 100 then
-			distances[userId][stat] -= 100
-
-			local player = Players:GetPlayerByUserId(userId)
-
-			if player then
-				DuckService:LevelUp(player, stat, 1)
-				DuckService:AddXP(player, stat, 10)
-			end
-		end
+		local player = Players:GetPlayerByUserId(userId)
+		DuckService:AddXP(player, stat, distanceMoved)
 	end
 end)
