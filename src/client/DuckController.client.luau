@@ -33,12 +33,14 @@ end)
 local function setupCharacter(character)
 	root = character:WaitForChild("HumanoidRootPart")
 	humanoid = character:WaitForChild("Humanoid")
-	UpdateDuckRemote:FireServer()
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
 end
 
 if player.Character then
 	setupCharacter(player.Character)
 end
+
+player.CharacterAdded:Connect(setupCharacter)
 
 RunService.Heartbeat:Connect(function()
 	if not root or not DuckData then
@@ -46,20 +48,16 @@ RunService.Heartbeat:Connect(function()
 	end
 
 	local newMovementState
-	if humanoid.FloorMaterial == Enum.Material.Water then
+	if humanoid.FloorMaterial == Enum.Material.ForceField then
 		newMovementState = "Water"
 	elseif humanoid:GetState() == Enum.HumanoidStateType.Freefall then
 		local velocity = root.AssemblyLinearVelocity
 		if velocity.Y < 0 then
-			root.AssemblyLinearVelocity = Vector3.new(velocity.X, -10, velocity.Z)
+			root.AssemblyLinearVelocity = Vector3.new(velocity.X, math.max(velocity.Y, -10), velocity.Z)
 		end
 		newMovementState = "Air"
 	elseif humanoid:GetState() == Enum.HumanoidStateType.Running then
 		newMovementState = "Land"
-	end
-
-	if newMovementState == currentMovementState then
-		return
 	end
 
 	currentMovementState = newMovementState

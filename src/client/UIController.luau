@@ -2,7 +2,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local gui = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local InventoryController = require(script.Parent.InventoryController)
@@ -21,10 +20,17 @@ local Buttons = {
 	end,
 }
 
+local function GetGUI()
+	local playerGui = player:WaitForChild("PlayerGui")
+	return playerGui:WaitForChild("ScreenGui")
+end
+
 function UIController:UpdateUI(DuckData)
 	if not DuckData then
 		return
 	end
+
+	local gui = GetGUI()
 
 	local text = ""
 
@@ -44,6 +50,7 @@ function UIController:UpdateUI(DuckData)
 end
 
 function UIController:Init()
+	local gui = GetGUI()
 	for buttonName, action in pairs(Buttons) do
 		local button = gui:WaitForChild(buttonName)
 		button.MouseButton1Click:Connect(action)

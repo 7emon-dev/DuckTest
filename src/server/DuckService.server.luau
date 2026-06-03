@@ -102,7 +102,7 @@ RunService.Heartbeat:Connect(function()
 		local stat
 		local state = humanoid:GetState()
 
-		if humanoid.FloorMaterial == Enum.Material.Water then
+		if humanoid.FloorMaterial == Enum.Material.ForceField then
 			stat = "Water"
 			distanceMoved = horizontal.Magnitude
 		elseif state == Enum.HumanoidStateType.Freefall then
