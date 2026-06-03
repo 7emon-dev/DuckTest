@@ -1,9 +1,11 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local UpdateDuckRemote = ReplicatedStorage.Remotes.UpdateDuck
 
 local player = Players.LocalPlayer
+local UIController = require(script.Parent.UIController)
 
 local root
 local humanoid
@@ -11,16 +13,32 @@ local humanoid
 local DuckData = nil
 local currentMovementState = nil
 
+function UpdateSpeed(state)
+	if state == "Air" then
+		humanoid.WalkSpeed = DuckData.Speed.Air
+	elseif state == "Land" then
+		humanoid.WalkSpeed = DuckData.Speed.Land
+	elseif state == "Water" then
+		humanoid.WalkSpeed = DuckData.Speed.Water
+	end
+end
+
 UpdateDuckRemote.OnClientEvent:Connect(function(ServerData)
 	DuckData = ServerData
-	print("Duck data updated:", DuckData)
+	UIController:UpdateUI(DuckData)
+	UpdateSpeed(currentMovementState)
+	-- print("Duck data updated:", DuckData)
 end)
 
-player.CharacterAdded:Connect(function(character)
+local function setupCharacter(character)
 	root = character:WaitForChild("HumanoidRootPart")
 	humanoid = character:WaitForChild("Humanoid")
 	UpdateDuckRemote:FireServer()
-end)
+end
+
+if player.Character then
+	setupCharacter(player.Character)
+end
 
 RunService.Heartbeat:Connect(function()
 	if not root or not DuckData then
@@ -45,12 +63,5 @@ RunService.Heartbeat:Connect(function()
 	end
 
 	currentMovementState = newMovementState
-
-	if newMovementState == "Air" then
-		humanoid.WalkSpeed = DuckData.Speed.Air
-	elseif newMovementState == "Land" then
-		humanoid.WalkSpeed = DuckData.Speed.Land
-	elseif newMovementState == "Water" then
-		humanoid.WalkSpeed = DuckData.Speed.Water
-	end
+	UpdateSpeed(currentMovementState)
 end)

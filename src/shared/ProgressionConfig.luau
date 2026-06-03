@@ -1,7 +1,7 @@
 local ProgressionConfig = {}
 
 function ProgressionConfig.GetSpeed(level)
-	return level * 2
+	return 50 * (1 - 1.1 ^ -level)
 end
 
 function ProgressionConfig.GetXPRequired(level)

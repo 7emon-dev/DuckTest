@@ -116,6 +116,6 @@ RunService.Heartbeat:Connect(function()
 		end
 
 		local player = Players:GetPlayerByUserId(userId)
-		DuckService:AddXP(player, stat, distanceMoved)
+		DuckService:AddXP(player, stat, distanceMoved * 16) -- *1 for normal, 16 for debug
 	end
 end)

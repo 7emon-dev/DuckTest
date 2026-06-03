@@ -12,9 +12,6 @@
     "ServerScriptService": {
       "Server": {
         "$path": "src/server"
-      },
-      "Config": {
-        "$path": "src/config"
       }
     },
 
