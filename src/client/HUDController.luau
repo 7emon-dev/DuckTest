@@ -45,7 +45,8 @@ function UIController:UpdateUI(DuckData)
 	end
 
 	text ..= string.format("\nTotal XP: %.0f", DuckData.XP.Total)
-
+	text ..= string.format("\nTrophies: %d", DuckData.trophies)
+	text ..= string.format("\nMultiplier: %d", DuckData.multiplier)
 	gui.StatsLabel.Text = text
 end
 

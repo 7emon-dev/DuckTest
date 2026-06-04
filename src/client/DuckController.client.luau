@@ -5,7 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UpdateDuckRemote = ReplicatedStorage.Remotes.UpdateDuck
 
 local player = Players.LocalPlayer
-local UIController = require(script.Parent.UIController)
+local HUDController = require(script.Parent.HUDController)
 
 local root
 local humanoid
@@ -25,7 +25,7 @@ end
 
 UpdateDuckRemote.OnClientEvent:Connect(function(ServerData)
 	DuckData = ServerData
-	UIController:UpdateUI(DuckData)
+	HUDController:UpdateUI(DuckData)
 	UpdateSpeed(currentMovementState)
 	-- print("Duck data updated:", DuckData)
 end)

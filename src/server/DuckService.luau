@@ -11,7 +11,7 @@ local roots = {}
 local humanoids = {}
 local lastPositions = {}
 
-local DuckDatas = {}
+local PlayerDatas = {}
 
 Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(character)
@@ -23,11 +23,11 @@ Players.PlayerAdded:Connect(function(player)
 
 		lastPositions[player.UserId] = root.Position
 
-		DuckDatas[player.UserId] = {
+		PlayerDatas[player.UserId] = {
 			Speed = {
-				Land = 12,
-				Water = 12,
-				Air = 12,
+				Land = 1,
+				Water = 1,
+				Air = 1,
 			},
 			XP = {
 				Land = 0,
@@ -40,10 +40,14 @@ Players.PlayerAdded:Connect(function(player)
 				Water = 1,
 				Air = 1,
 			},
+			multiplier = 1,
+			-- 1, 2, 5,  25,  50,  100,  250,    500
+			-- 0, 3, 15, 100, 500, 2500, 15000, 50000
+			trophies = 1,
 		}
 
-		for level, value in pairs(DuckDatas[player.UserId].Level) do
-			DuckDatas[player.UserId].Speed[level] = ProgressionConfig.GetSpeed(value)
+		for level, value in pairs(PlayerDatas[player.UserId].Level) do
+			PlayerDatas[player.UserId].Speed[level] = ProgressionConfig.GetSpeed(value)
 		end
 	end)
 end)
@@ -52,21 +56,22 @@ Players.PlayerRemoving:Connect(function(player)
 	roots[player.UserId] = nil
 	humanoids[player.UserId] = nil
 	lastPositions[player.UserId] = nil
-	DuckDatas[player.UserId] = nil
+	PlayerDatas[player.UserId] = nil
 end)
 
 UpdateDuckRemote.OnServerEvent:Connect(function(player)
-	local ServerData = DuckDatas[player.UserId]
+	local ServerData = PlayerDatas[player.UserId]
 	UpdateDuckRemote:FireClient(player, ServerData)
 end)
 
 function DuckService:AddXP(player, stat, amount)
-	local data = DuckDatas[player.UserId]
+	local data = PlayerDatas[player.UserId]
 	if not data then
 		return
 	end
 
 	data.XP[stat] += amount
+	data.XP.Total += amount
 
 	if data.XP[stat] >= ProgressionConfig.GetXPRequired(data.Level[stat]) then
 		data.XP[stat] -= ProgressionConfig.GetXPRequired(data.Level[stat])
@@ -75,13 +80,31 @@ function DuckService:AddXP(player, stat, amount)
 	UpdateDuckRemote:FireClient(player, data)
 end
 
+function DuckService:AddTrophies(player, amount)
+	local data = PlayerDatas[player.UserId]
+	if not data then
+		return
+	end
+
+	data.trophies += amount
+end
+
 function DuckService:LevelUp(player, stat, amount)
-	local data = DuckDatas[player.UserId]
+	local data = PlayerDatas[player.UserId]
 	if not data then
 		return
 	end
 	data.Level[stat] += amount
 	data.Speed[stat] = ProgressionConfig.GetSpeed(data.Level[stat])
+end
+
+function DuckService:ApplyMultiplier(player, multiplier)
+	local data = PlayerDatas[player.UserId]
+	if not data then
+		return
+	end
+
+	data.multiplier = multiplier
 end
 
 RunService.Heartbeat:Connect(function()
@@ -116,6 +139,9 @@ RunService.Heartbeat:Connect(function()
 		end
 
 		local player = Players:GetPlayerByUserId(userId)
-		DuckService:AddXP(player, stat, distanceMoved * 16) -- *1 for normal, 16 for debug
+
+		DuckService:AddXP(player, stat, distanceMoved * PlayerDatas[userId].multiplier) -- *1 for normal, 16 for debug
 	end
 end)
+
+return DuckService

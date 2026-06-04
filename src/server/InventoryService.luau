@@ -32,7 +32,7 @@ function InventoryService:AddPet(player, petId)
 end
 
 function InventoryService:PushInventory(player)
-	print("Send to Client:", player.Name)
+	-- print("Send to Client:", player.Name)
 	UpdateInventory:FireClient(player, self:GetInventory(player))
 end
 
