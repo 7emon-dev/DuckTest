@@ -14,12 +14,23 @@ local DuckData = nil
 local currentMovementState = nil
 
 function UpdateSpeed(state)
+	local newSpeed
+	local velocity = root.AssemblyLinearVelocity
 	if state == "Air" then
-		humanoid.WalkSpeed = DuckData.Speed.Air
+		newSpeed = DuckData.Speed.Air
+		root.AssemblyLinearVelocity =
+			Vector3.new(math.min(velocity.x, newSpeed), velocity.Y, math.min(velocity.z, newSpeed))
+		humanoid.WalkSpeed = newSpeed
 	elseif state == "Land" then
-		humanoid.WalkSpeed = DuckData.Speed.Land
+		newSpeed = DuckData.Speed.Land
+		root.AssemblyLinearVelocity =
+			Vector3.new(math.min(velocity.x, newSpeed), velocity.Y, math.min(velocity.z, newSpeed))
+		humanoid.WalkSpeed = newSpeed
 	elseif state == "Water" then
-		humanoid.WalkSpeed = DuckData.Speed.Water
+		newSpeed = DuckData.Speed.Water
+		root.AssemblyLinearVelocity =
+			Vector3.new(math.min(velocity.x, newSpeed), velocity.Y, math.min(velocity.z, newSpeed))
+		humanoid.WalkSpeed = newSpeed
 	end
 end
 
@@ -48,6 +59,7 @@ RunService.Heartbeat:Connect(function()
 	end
 
 	local newMovementState
+
 	if humanoid.FloorMaterial == Enum.Material.ForceField then
 		newMovementState = "Water"
 	elseif humanoid:GetState() == Enum.HumanoidStateType.Freefall then
@@ -58,6 +70,10 @@ RunService.Heartbeat:Connect(function()
 		newMovementState = "Air"
 	elseif humanoid:GetState() == Enum.HumanoidStateType.Running then
 		newMovementState = "Land"
+	end
+
+	if newMovementState == currentMovementState then
+		return
 	end
 
 	currentMovementState = newMovementState

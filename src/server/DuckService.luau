@@ -14,6 +14,28 @@ local lastPositions = {}
 local PlayerDatas = {}
 
 Players.PlayerAdded:Connect(function(player)
+	PlayerDatas[player.UserId] = {
+		Speed = {
+			Land = 1,
+			Water = 1,
+			Air = 1,
+		},
+		XP = {
+			Land = 0,
+			Water = 0,
+			Air = 0,
+			Total = 0,
+		},
+		Level = {
+			Land = 1,
+			Water = 1,
+			Air = 1,
+		},
+		multiplier = 1,
+		-- 1, 2, 5,  25,  50,  100,  250,    500
+		-- 0, 3, 15, 100, 500, 2500, 15000, 50000
+		trophies = 1,
+	}
 	player.CharacterAdded:Connect(function(character)
 		local root = character:WaitForChild("HumanoidRootPart")
 		local humanoid = character:WaitForChild("Humanoid")
@@ -22,29 +44,6 @@ Players.PlayerAdded:Connect(function(player)
 		humanoids[player.UserId] = humanoid
 
 		lastPositions[player.UserId] = root.Position
-
-		PlayerDatas[player.UserId] = {
-			Speed = {
-				Land = 1,
-				Water = 1,
-				Air = 1,
-			},
-			XP = {
-				Land = 0,
-				Water = 0,
-				Air = 0,
-				Total = 0,
-			},
-			Level = {
-				Land = 1,
-				Water = 1,
-				Air = 1,
-			},
-			multiplier = 1,
-			-- 1, 2, 5,  25,  50,  100,  250,    500
-			-- 0, 3, 15, 100, 500, 2500, 15000, 50000
-			trophies = 1,
-		}
 
 		for level, value in pairs(PlayerDatas[player.UserId].Level) do
 			PlayerDatas[player.UserId].Speed[level] = ProgressionConfig.GetSpeed(value)
