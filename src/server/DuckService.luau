@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 
 local UpdateDuckRemote = ReplicatedStorage.Remotes.UpdateDuck
 local ProgressionConfig = require(ReplicatedStorage.Shared.ProgressionConfig)
+local DataService = require(script.Parent.DataService)
 
 local DuckService = {}
 
@@ -14,28 +15,7 @@ local lastPositions = {}
 local PlayerDatas = {}
 
 Players.PlayerAdded:Connect(function(player)
-	PlayerDatas[player.UserId] = {
-		Speed = {
-			Land = 1,
-			Water = 1,
-			Air = 1,
-		},
-		XP = {
-			Land = 0,
-			Water = 0,
-			Air = 0,
-			Total = 0,
-		},
-		Level = {
-			Land = 1,
-			Water = 1,
-			Air = 1,
-		},
-		multiplier = 1,
-		-- 1, 2, 5,  25,  50,  100,  250,    500
-		-- 0, 3, 15, 100, 500, 2500, 15000, 50000
-		trophies = 1,
-	}
+	PlayerDatas[player.UserId] = DataService:LoadPlayer(player)
 	player.CharacterAdded:Connect(function(character)
 		local root = character:WaitForChild("HumanoidRootPart")
 		local humanoid = character:WaitForChild("Humanoid")
@@ -52,6 +32,7 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
+	DataService:SavePlayer(player, PlayerDatas[player.UserId])
 	roots[player.UserId] = nil
 	humanoids[player.UserId] = nil
 	lastPositions[player.UserId] = nil
@@ -97,9 +78,13 @@ function DuckService:LevelUp(player, stat, amount)
 	data.Speed[stat] = ProgressionConfig.GetSpeed(data.Level[stat])
 end
 
-function DuckService:ApplyMultiplier(player, multiplier)
+function DuckService:ApplyMultiplier(player, cost, multiplier)
 	local data = PlayerDatas[player.UserId]
 	if not data then
+		return
+	end
+
+	if data.trophies < cost then
 		return
 	end
 
@@ -139,8 +124,34 @@ RunService.Heartbeat:Connect(function()
 
 		local player = Players:GetPlayerByUserId(userId)
 
-		DuckService:AddXP(player, stat, distanceMoved * PlayerDatas[userId].multiplier) -- *1 for normal, 16 for debug
+		DuckService:AddXP(player, stat, distanceMoved * PlayerDatas[userId].multiplier)
 	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(120)
+
+		for _, player in Players:GetPlayers() do
+			local data = PlayerDatas[player.UserId]
+
+			if data then
+				DataService:SavePlayer(player, data)
+			end
+		end
+	end
+end)
+
+game:BindToClose(function()
+	for _, player in Players:GetPlayers() do
+		local data = PlayerDatas[player.UserId]
+
+		if data then
+			DataService:SavePlayer(player, data)
+		end
+	end
+
+	task.wait(2)
 end)
 
 return DuckService

@@ -51,8 +51,9 @@ local function multiplierPadTouched(pad, hit)
 		debounce[player.UserId] = nil
 	end)
 
+	local cost = pad:GetAttribute("Cost") or 0
 	local multiplier = pad:GetAttribute("Multiplier") or 1
-	DuckService:ApplyMultiplier(player, multiplier)
+	DuckService:ApplyMultiplier(player, cost, multiplier)
 end
 
 for _, pad in ipairs(trophyFolder:GetChildren()) do

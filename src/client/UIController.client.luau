@@ -8,7 +8,7 @@ local function createBillboard(part, text)
 	gui.StudsOffset = Vector3.new(0, 4, 0)
 	gui.AlwaysOnTop = true
 	gui.Parent = part
-	gui.MaxDistance = 50
+	gui.MaxDistance = 100
 
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.fromScale(1, 1)

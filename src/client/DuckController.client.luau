@@ -45,6 +45,7 @@ local function setupCharacter(character)
 	root = character:WaitForChild("HumanoidRootPart")
 	humanoid = character:WaitForChild("Humanoid")
 	humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
+	UpdateDuckRemote:FireServer()
 end
 
 if player.Character then
