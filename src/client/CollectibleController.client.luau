@@ -10,13 +10,23 @@ local collectibles = workspace:WaitForChild("Collectibles")
 local CollectibleConfig = {
 	Land = {
 		Model = CollectibleModels.Seed,
-		RespawnTime = 5,
 	},
 	Water = {
 		Model = CollectibleModels.Bread,
-		RespawnTime = 5,
 	},
 }
+
+-- inactive pool
+local objectPool = {
+	Land = {}, -- seeds
+	Water = {}, -- bread
+}
+
+-- active pool, seeds/bread
+local activePool = {}
+
+local MAGNET_RADIUS = 8
+local MAGNET_SPEED = 3
 
 local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
@@ -29,6 +39,33 @@ player.CharacterAdded:Connect(function()
 	character = player.Character
 	root = character:WaitForChild("HumanoidRootPart")
 end)
+
+local function createPool(collectibleType, poolSize)
+	local pool = objectPool[collectibleType]
+	for i = 1, poolSize do
+		local gameObj = CollectibleConfig[collectibleType].Model:Clone()
+		gameObj.Parent = collectibles
+		gameObj.Anchored = true
+		gameObj.CanCollide = false
+		gameObj.Transparency = 1
+		table.insert(pool, { instance = gameObj, active = false, type = collectibleType, zone = nil })
+	end
+end
+
+for collectibleType, _ in pairs(objectPool) do
+	createPool(collectibleType, 1000)
+end
+
+local function getPool(collectibleType)
+	local pool = objectPool[collectibleType]
+	for _, obj in ipairs(pool) do
+		if not obj.active then
+			obj.active = true
+			return obj
+		end
+	end
+	return
+end
 
 local function getRandomCFrame(collectibleType, zone)
 	local size = zone.Size
@@ -47,22 +84,21 @@ local function getRandomCFrame(collectibleType, zone)
 	return CFrame.new(position) * rotation
 end
 
-local function createCollectible(collectibleType, cf)
-	local model
-	if collectibleType == "Land" then
-		model = CollectibleConfig.Land.Model:Clone()
-	elseif collectibleType == "Water" then
-		model = CollectibleConfig.Water.Model:Clone()
-	else
+local function spawnCollectible(collectibleType, zone)
+	local obj = getPool(collectibleType)
+	if not obj then
 		return
 	end
-	model:SetAttribute("CollectibleType", collectibleType)
-	model:PivotTo(cf)
-	model.Parent = collectibles
-	model.Anchored = true
-	model.CanCollide = false
 
-	return model
+	local collectible = obj.instance
+	obj.zone = zone
+	obj.active = true
+
+	collectible.CFrame = getRandomCFrame(collectibleType, zone)
+	collectible.Transparency = 0
+
+	activePool[collectible] = obj
+	return
 end
 
 for _, collectibleType in ipairs(collectibleSpawns:GetChildren()) do
@@ -70,34 +106,33 @@ for _, collectibleType in ipairs(collectibleSpawns:GetChildren()) do
 		if zone:IsA("BasePart") then
 			local density = zone:GetAttribute("SeedDensity") or 500
 			for _ = 1, density do
-				createCollectible(collectibleType.Name, getRandomCFrame(collectibleType.Name, zone))
+				spawnCollectible(collectibleType.Name, zone)
 			end
 		end
 	end
-end
-
-local function respawnCollectible(collectibleType, cf, respawnTime)
-	task.delay(respawnTime, function()
-		createCollectible(collectibleType, cf)
-	end)
 end
 
 local function collectCollectible(collectible)
 	if not collectible.Parent then
 		return
 	end
-	local collectibleType = collectible:GetAttribute("CollectibleType")
+	local obj = activePool[collectible]
+	if not obj then
+		return
+	end
+	obj.active = false
+	collectible.Transparency = 1
+	activePool[collectible] = nil
 
-	collectible:Destroy()
-	respawnCollectible(collectibleType, collectible:GetPivot(), 5)
+	spawnCollectible(obj.type, obj.zone)
 end
-
-local MAGNET_RADIUS = 8
-local MAGNET_SPEED = 3
 
 local function magnetPull(collectible, dt)
 	local direction = root.Position - collectible.Position
 	local distance = direction.Magnitude
+	if distance <= 2 then
+		return
+	end
 	local strength = 1 + (MAGNET_RADIUS - distance)
 	local moveAmount = MAGNET_SPEED * strength * dt
 
