@@ -12,7 +12,6 @@ local CollectibleConfig = {
 		Model = CollectibleModels.Seed,
 		RespawnTime = 5,
 	},
-
 	Water = {
 		Model = CollectibleModels.Bread,
 		RespawnTime = 5,
@@ -93,7 +92,22 @@ local function collectCollectible(collectible)
 	respawnCollectible(collectibleType, collectible:GetPivot(), 5)
 end
 
-RunService.RenderStepped:Connect(function()
+local MAGNET_RADIUS = 8
+local MAGNET_SPEED = 3
+
+local function magnetPull(collectible, dt)
+	local direction = root.Position - collectible.Position
+	local distance = direction.Magnitude
+	local strength = 1 + (MAGNET_RADIUS - distance)
+	local moveAmount = MAGNET_SPEED * strength * dt
+
+	collectible.Position += direction.Unit * math.min(
+		moveAmount * math.max(MAGNET_SPEED, root.AssemblyLinearVelocity.Magnitude / 10),
+		distance
+	)
+end
+
+RunService.RenderStepped:Connect(function(dt)
 	if not root then
 		return
 	end
@@ -103,10 +117,12 @@ RunService.RenderStepped:Connect(function()
 			continue
 		end
 
-		local dist = (root.Position - collectible.Position).Magnitude
+		local distance = (root.Position - collectible.Position).Magnitude
 
-		if dist <= 5 then
+		if distance <= 2 then
 			collectCollectible(collectible)
+		elseif distance <= MAGNET_RADIUS then
+			magnetPull(collectible, dt)
 		end
 	end
 end)
