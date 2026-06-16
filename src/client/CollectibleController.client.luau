@@ -1,7 +1,11 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
+local Debris = game:GetService("Debris")
+
 local CollectibleModels = ReplicatedStorage.Assets.Collectibles
+local PopSound = ReplicatedStorage.Assets.Sounds:WaitForChild("Pop Sound Effect")
 
 local player = Players.LocalPlayer
 local collectibleSpawns = workspace:WaitForChild("CollectibleSpawns")
@@ -28,6 +32,15 @@ local activePool = {}
 local MAGNET_RADIUS = 8
 local MAGNET_SPEED = 3
 
+local combo = 0
+local lastCollect = 0
+local lastSoundTime = 0
+local COMBO_WINDOW = 0.2
+local COMBO_DECAY = 50
+local MAX_COMBO = 200
+local SOUND_COOLDOWN = 0.08
+local PITCH_INCREMENT = 0.005
+
 local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
 
@@ -40,9 +53,28 @@ player.CharacterAdded:Connect(function()
 	root = character:WaitForChild("HumanoidRootPart")
 end)
 
+local function playPopSound()
+	local now = tick()
+	local elapsed = now - lastCollect
+	lastCollect = now
+	combo -= elapsed * COMBO_DECAY
+	combo = math.clamp(combo + 1, 0, MAX_COMBO)
+	if now - lastSoundTime < SOUND_COOLDOWN then
+		return
+	end
+	local sound = PopSound:Clone()
+	sound.Parent = SoundService
+
+	sound.PlaybackSpeed = 1 + combo * PITCH_INCREMENT
+
+	sound:Play()
+	lastSoundTime = now
+	Debris:AddItem(sound, 0.5)
+end
+
 local function createPool(collectibleType, poolSize)
 	local pool = objectPool[collectibleType]
-	for i = 1, poolSize do
+	for _ = 1, poolSize do
 		local gameObj = CollectibleConfig[collectibleType].Model:Clone()
 		gameObj.Parent = collectibles
 		gameObj.Anchored = true
@@ -124,6 +156,7 @@ local function collectCollectible(collectible)
 	collectible.Transparency = 1
 	activePool[collectible] = nil
 
+	playPopSound()
 	spawnCollectible(obj.type, obj.zone)
 end
 
