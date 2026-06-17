@@ -1,7 +1,9 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local DuckService = require(script.Parent.DuckService)
 
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local trophyFolder = workspace:WaitForChild("TrophyPads")
 local multiplierFolder = workspace:WaitForChild("MultiplierPads")
 
@@ -24,6 +26,8 @@ local function trophyPadTouched(pad, hit)
 	task.delay(1, function()
 		debounce[player.UserId] = nil
 	end)
+
+	Remotes.PlayTrophy:FireClient(Players:GetPlayerFromCharacter(hit:FindFirstAncestorOfClass("Model")))
 
 	local amount = pad:GetAttribute("TrophyAmount") or 1
 	DuckService:AddTrophies(player, amount)

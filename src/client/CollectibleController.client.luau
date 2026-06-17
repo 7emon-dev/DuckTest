@@ -35,7 +35,6 @@ local MAGNET_SPEED = 3
 local combo = 0
 local lastCollect = 0
 local lastSoundTime = 0
-local COMBO_WINDOW = 0.2
 local COMBO_DECAY = 50
 local MAX_COMBO = 200
 local SOUND_COOLDOWN = 0.08

@@ -41,11 +41,8 @@ end
 for _, pad in ipairs(multiplierFolder:GetChildren()) do
 	registerPad(pad)
 end
-
-multiplierFolder.ChildAdded:Connect(registerPad)
-
 for _, pad in ipairs(trophyFolder:GetChildren()) do
 	registerPad(pad)
 end
-
+multiplierFolder.ChildAdded:Connect(registerPad)
 trophyFolder.ChildAdded:Connect(registerPad)

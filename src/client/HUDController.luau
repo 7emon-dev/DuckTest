@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 
@@ -57,6 +58,37 @@ function UIController:Init()
 		button.MouseButton1Click:Connect(action)
 	end
 end
+
+local function DisplayTrophyIcon()
+	local decal = ReplicatedStorage.Assets.UI.Trophy:Clone()
+	local icon = Instance.new("ImageLabel")
+	icon.Parent = GetGUI()
+	icon.Image = decal.Texture
+	icon.Position = UDim2.fromScale(0.5, 0.5)
+	icon.Size = UDim2.fromOffset(50, 50)
+
+	icon.ImageTransparency = 1
+
+	TweenService:Create(icon, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		ImageTransparency = 0,
+		Position = icon.Position - UDim2.fromOffset(0, 60),
+		Size = UDim2.fromOffset(100, 100),
+	}):Play()
+
+	task.delay(1, function()
+		TweenService:Create(icon, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			ImageTransparency = 1,
+		}):Play()
+	end)
+
+	task.delay(1.5, function()
+		icon:Destroy()
+	end)
+end
+
+Remotes.PlayTrophy.OnClientEvent:Connect(function()
+	DisplayTrophyIcon()
+end)
 
 UIController:Init()
 
