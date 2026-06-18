@@ -2,6 +2,10 @@ local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
 
+local HazardService = require(script.HazardService)
+
+HazardService.Init()
+
 local petsFolder = Workspace:FindFirstChild("Pets")
 
 if not petsFolder then
