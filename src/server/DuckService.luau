@@ -91,6 +91,30 @@ function DuckService:ApplyMultiplier(player, cost, multiplier)
 	data.multiplier = multiplier
 end
 
+ReplicatedStorage.Remotes.Reset.OnServerEvent:Connect(function(player)
+	PlayerDatas[player.UserId] = {
+		Speed = {
+			Land = 12,
+			Water = 12,
+			Air = 12,
+		},
+		XP = {
+			Land = 0,
+			Water = 0,
+			Air = 0,
+			Total = 0,
+		},
+		Level = {
+			Land = 1,
+			Water = 1,
+			Air = 1,
+		},
+		multiplier = 1,
+		trophies = 0,
+	}
+	DataService:SavePlayer(player, PlayerDatas[player.UserId])
+end)
+
 RunService.Heartbeat:Connect(function()
 	for userId, root in pairs(roots) do
 		local humanoid = humanoids[userId]

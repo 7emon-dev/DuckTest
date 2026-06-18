@@ -6,6 +6,7 @@ local player = Players.LocalPlayer
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local InventoryController = require(script.Parent.InventoryController)
+local SoundController = require(script.Parent.SoundController)
 local ProgressionConfig = require(ReplicatedStorage.Shared.ProgressionConfig)
 
 local UIController = {}
@@ -18,6 +19,10 @@ local Buttons = {
 	InventoryButton = function()
 		print("Inventory button clicked")
 		InventoryController.DisplayInventory()
+	end,
+	ResetButton = function()
+		print("Reset button clicked")
+		Remotes.Reset:FireServer(player)
 	end,
 }
 
@@ -62,8 +67,8 @@ end
 local function DisplayTrophyIcon()
 	local decal = ReplicatedStorage.Assets.UI.Trophy:Clone()
 	local icon = Instance.new("ImageLabel")
-	icon.Parent = GetGUI()
 	icon.Image = decal.Texture
+	icon.Parent = GetGUI()
 	icon.Position = UDim2.fromScale(0.5, 0.5)
 	icon.Size = UDim2.fromOffset(50, 50)
 
@@ -87,6 +92,7 @@ local function DisplayTrophyIcon()
 end
 
 Remotes.PlayTrophy.OnClientEvent:Connect(function()
+	SoundController:Trophy()
 	DisplayTrophyIcon()
 end)
 

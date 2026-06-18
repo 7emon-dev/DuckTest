@@ -5,9 +5,9 @@ local DataService = {}
 
 local DefaultData = {
 	Speed = {
-		Land = 1,
-		Water = 1,
-		Air = 1,
+		Land = 12,
+		Water = 12,
+		Air = 12,
 	},
 	XP = {
 		Land = 0,
