@@ -57,7 +57,8 @@ local function createPool(collectibleType, poolSize)
 end
 
 for collectibleType, _ in pairs(objectPool) do
-	createPool(collectibleType, 1000)
+	local poolSize = collectibles:GetAttribute("PoolSize") or 1000
+	createPool(collectibleType, poolSize)
 end
 
 local function getPool(collectibleType)
@@ -108,7 +109,7 @@ end
 for _, collectibleType in ipairs(collectibleSpawns:GetChildren()) do
 	for _, zone in ipairs(collectibleType:GetChildren()) do
 		if zone:IsA("BasePart") then
-			local density = zone:GetAttribute("SeedDensity") or 250
+			local density = zone:GetAttribute("CollectibleDensity") or 250
 			for _ = 1, density do
 				spawnCollectible(collectibleType.Name, zone)
 			end
