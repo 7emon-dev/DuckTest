@@ -5,11 +5,13 @@ local hazards = workspace:WaitForChild("Hazards")
 local chases = hazards:WaitForChild("Chases")
 local spinners = hazards:WaitForChild("Arms")
 local doors = hazards:WaitForChild("Doors")
+local platforms = hazards:WaitForChild("Platforms")
 
 local HazardService = {}
 local activeChases = {}
 local activeSpinners = {}
 local activeDoors = {}
+local activePlatforms = {}
 
 local function hitPlayer(hit)
 	local character = hit:FindFirstAncestorOfClass("Model")
@@ -39,6 +41,7 @@ function HazardService:StartChase(chase)
 			task.wait(data.reload)
 			tween:Play()
 			tween.Completed:Wait()
+			task.wait(data.reload / 2)
 		end
 	end)
 end
@@ -68,6 +71,38 @@ function HazardService:StartDoor(door)
 	end)
 end
 
+function HazardService:StartPlatform(platform)
+	task.spawn(function()
+		local data = activePlatforms[platform]
+
+		if not data then
+			return
+		end
+
+		if data.isBusy then
+			return
+		end
+
+		data.isBusy = true
+
+		task.delay(0.5, function()
+			platform.Hitbox.Anchored = false
+			task.wait(1.5)
+			platform.Hitbox.Anchored = true
+		end)
+
+		task.delay(data.reload, function()
+			if platform.Hitbox then
+				platform.Hitbox.Anchored = true
+				platform.Hitbox.AssemblyLinearVelocity = Vector3.zero
+				platform.Hitbox.AssemblyAngularVelocity = Vector3.zero
+				platform.Hitbox.CFrame = data.startCF
+			end
+			data.isBusy = false
+		end)
+	end)
+end
+
 function HazardService:InitChase(chase)
 	if activeChases[chase] then
 		return
@@ -78,6 +113,8 @@ function HazardService:InitChase(chase)
 
 	chase.Hitbox.CanCollide = false
 	chase.Hitbox.Anchored = true
+	chase.Start.Transparency = 1
+	chase.End.Transparency = 1
 
 	activeChases[chase] = {
 		startCF = chase.Start.CFrame,
@@ -132,7 +169,14 @@ function HazardService:InitDoor(door)
 	door.Start.CanCollide = false
 	door.End.CanCollide = false
 
+	door.Start.Transparency = 1
+	door.End.Transparency = 1
+
 	door.Hitbox.CFrame = door.End.CFrame
+
+	door.Button.Touched:Connect(function()
+		HazardService:StartDoor(door)
+	end)
 
 	activeDoors[door] = {
 		startCF = door.Start.CFrame,
@@ -142,10 +186,26 @@ function HazardService:InitDoor(door)
 		speed = door:GetAttribute("Speed"),
 		isBusy = false,
 	}
+end
 
-	activeDoors[door].button.Touched:Connect(function()
-		HazardService:StartDoor(door)
+function HazardService:InitPlatform(platform)
+	if activePlatforms[platform] then
+		return
+	end
+
+	platform.Hitbox.Anchored = true
+	platform.Hitbox.CanCollide = true
+
+	platform.Hitbox.Touched:Connect(function()
+		HazardService:StartPlatform(platform)
 	end)
+
+	activePlatforms[platform] = {
+		startCF = platform.Hitbox.CFrame,
+		hitbox = platform.Hitbox,
+		reload = platform:GetAttribute("ReloadTime") or 5,
+		isBusy = false,
+	}
 end
 
 RunService.Heartbeat:Connect(function(dt)
@@ -170,6 +230,9 @@ function HazardService:Init()
 	end
 	for _, door in ipairs(doors:GetChildren()) do
 		HazardService:InitDoor(door)
+	end
+	for _, platform in ipairs(platforms:GetChildren()) do
+		HazardService:InitPlatform(platform)
 	end
 end
 
